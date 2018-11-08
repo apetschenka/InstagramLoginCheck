@@ -24,19 +24,24 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import de.mankido.setup.Configuration;
+
 @RunWith(SpringRunner.class)
 public class LoginResourceTest {
 	
 	LoginResource resource;
 	
+	Configuration configuration;
+	
 	@Before
 	public void setUp() {
 		resource = new LoginResource();
+		configuration = Configuration.instance();
 	}
 
 	@Test
-	public void getRoute() throws Exception {
-		JsonObject pois = resource.login("testuser", "testpassword");
+	public void testLogin() throws Exception {
+		JsonObject pois = resource.login(configuration.getInstagramUser(), configuration.getInstagramPassword());
 		assertTrue(pois != null);
 	}
 

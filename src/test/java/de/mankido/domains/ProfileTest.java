@@ -25,8 +25,8 @@ import org.springframework.test.context.junit4.SpringRunner;
 public class ProfileTest {
 
 	@Test
-	public void noParamGreetingShouldReturnDefaultMessage() throws Exception {
-		Profile profile = new Profile("test");
+	public void testConstructor() throws Exception {
+		Profile profile = new Profile();
 		
 		assertTrue(profile != null);
 	}
