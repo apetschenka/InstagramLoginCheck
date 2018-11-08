@@ -12,6 +12,9 @@ public class Configuration {
 	private static String dbPassword = null; // "knorke";
 
 	private static String instagramLoginUrl = null;
+	private static String instagramUser = null;
+	private static String instagramPassword = null;
+	private static String instagramQuery = null;
 
 	private Configuration() {
 		properties = System.getProperties();
@@ -21,6 +24,8 @@ public class Configuration {
 		dbPassword = properties.getProperty("DB_PASSWORD");
 
 		instagramLoginUrl = properties.getProperty("INSTAGRAM_LOGIN_URL");
+		instagramUser = properties.getProperty("INSTAGRAM_USER");
+		instagramPassword = properties.getProperty("INSTAGRAM_PASSWORD");
 	}
 
 	public static Configuration instance() {
@@ -30,20 +35,32 @@ public class Configuration {
 		return instance;
 	}
 
-	public static String getDBUrl() {
+	public String getDBUrl() {
 		return dbUrl;
 	}
 
-	public static String getDBUser() {
+	public String getDBUser() {
 		return dbUser;
 	}
 
-	public static String getDBPassword() {
+	public String getDBPassword() {
 		return dbPassword;
 	}
 
-	public static String getInstagramLoginUrl() {
+	public String getInstagramLoginUrl() {
 		return instagramLoginUrl;
+	}
+
+	public String getInstagramUser() {
+		return instagramUser;
+	}
+
+	public String getInstagramPassword() {
+		return instagramPassword;
+	}
+
+	public String getInstagramQuery() {
+		return instagramQuery;
 	}
 	
 }
