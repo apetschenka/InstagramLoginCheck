@@ -41,7 +41,7 @@ public class LoginResourceTest {
 
 	@Test
 	public void testLogin() throws Exception {
-		JsonObject pois = resource.login(configuration.getInstagramUser(), configuration.getInstagramPassword());
+		JsonObject pois = resource.login(configuration.getInstaUser(), configuration.getInstaPassword());
 		assertTrue(pois != null);
 	}
 
