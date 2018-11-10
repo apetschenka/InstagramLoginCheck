@@ -84,9 +84,9 @@ public class Profile {
 
 	public JsonObject toJson() {
 		JsonObjectBuilder jsonObject = Json.createObjectBuilder();
-		jsonObject.add("id", id);
-		jsonObject.add("username", username);
-		jsonObject.add("fullName", fullName);
+		jsonObject.add("id", id == null ? "0" : id);
+		jsonObject.add("username", username == null ? "0" : username);
+		jsonObject.add("fullName", fullName == null ? "0" : fullName);
 		jsonObject.add("followers", followers);
 		return jsonObject.build();
 	}
