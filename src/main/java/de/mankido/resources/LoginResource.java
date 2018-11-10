@@ -2,15 +2,21 @@ package de.mankido.resources;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Scanner;
 
+import javax.json.Json;
 import javax.json.JsonObject;
 import javax.ws.rs.GET;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.xml.ws.handler.MessageContext;
 
+import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -29,29 +35,33 @@ import de.mankido.setup.Configuration;
 
 @RestController
 public class LoginResource {
-	
+
 	private static final Logger logger = Logger.getLogger(LoginResource.class.getSimpleName());
 
 	@GET
 	@RequestMapping("/login")
 	@Produces(MediaType.APPLICATION_JSON)
 	public JsonObject login(@PathParam("username") String username, @PathParam("password") String password) {
-		logger.info(String.format("login: %s | %s", username, password));
-		
-		HttpClient httpclient = HttpClients.createDefault();
-		HttpPost httppost = new HttpPost(Configuration.instance().getInstagramLoginUrl());
-
-		// Request parameters and other properties.
-		List<NameValuePair> params = new ArrayList<NameValuePair>(2);
-		params.add(new BasicNameValuePair("username", username));
-		params.add(new BasicNameValuePair("password", password));
-		params.add(new BasicNameValuePair("queryParams", "{\"source\":\"auth_switcher\"}"));
+		logger.infof("login: %s | %s", username, password);
+		HttpEntity entity = null;
 		
 		try {
-			httppost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
-			HttpResponse response = httpclient.execute(httppost);
-			HttpEntity entity = response.getEntity();
-			logger.info(String.format("entity: %s", entity));
+			HttpClient httpClient = HttpClients.createDefault();
+
+			HttpPost httpPost = null;
+
+			generateAuthPost(httpPost);
+			HttpResponse response = httpClient.execute(httpPost);
+			Header[] headers = response.getHeaders(MessageContext.HTTP_REQUEST_HEADERS);
+
+			generateLoginPost(httpPost, username, password);
+			httpPost.setHeaders(headers);
+			response = httpClient.execute(httpPost);
+			
+			entity = response.getEntity();
+		    Scanner s = new Scanner(entity.getContent()).useDelimiter("\\A");
+		    logger.info(s.next());
+			
 		} catch (UnsupportedEncodingException e) {
 			logger.info("UnsupportedEncodingException : ", e);
 		} catch (ClientProtocolException e) {
@@ -59,9 +69,47 @@ public class LoginResource {
 		} catch (IOException e) {
 			logger.info("IOException : ", e);
 		}
+
+		if(entity != null) {
+			Profile profile = new Profile();
+			return profile.toJson();
+		}
+		else {
+			return Json.createObjectBuilder().build();
+		}
+	}
+
+	private void generateAuthPost(HttpPost httpPost) throws UnsupportedEncodingException {
+		String instaAuthUrl = Configuration.instance().getInstaAuthUrl();
+		httpPost = new HttpPost(instaAuthUrl);
 		
-		Profile profile = new Profile();
+		long dateInMs = new Date().getTime();
+		String messageDataExtra = String.format(Configuration.INSTA_MSG_DATA_EXTRA_TMP, "1217981644879628",
+				"e4jtzx", dateInMs / 1000, "[1,0]", 1, 6, 17, dateInMs,
+				"https://www.instagram.com/accounts/login/?source=auth_switcher", "www.instagram.com",
+				"/accounts/login/?source=auth_switcher", "", "");
 		
-		return profile.toJson();
+		DecimalFormat decimalFormat = new DecimalFormat("#.000"); 
+		String messageData = String.format(Configuration.INSTA_MSG_DATA_TMP, decimalFormat.format(new Double(dateInMs) / 1000),
+				"instagram_web_time_spent_bit_array", messageDataExtra);
+		
+		String message = String.format(Configuration.INSTA_MSG_TMP, "1217981644879628", "1.0.0", messageData,
+				"client_event", 51, "166f360cf99-b65d94", "W-Lv3AALAAGKsvLlkMmXrcIlQBMG");
+
+		List<NameValuePair> params = new ArrayList<NameValuePair>(2);
+		params.add(new BasicNameValuePair("access_token", Configuration.instance().getInstaAccessToken()));
+		params.add(new BasicNameValuePair("message", message));
+		httpPost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
+	}
+
+	private void generateLoginPost(HttpPost httpPost, String username, String password) throws UnsupportedEncodingException {
+		String instaLoginUrl = Configuration.instance().getInstaLoginUrl();
+		httpPost = new HttpPost(instaLoginUrl);
+
+		List<NameValuePair> params = new ArrayList<NameValuePair>(3);
+		params.add(new BasicNameValuePair("username", username));
+		params.add(new BasicNameValuePair("password", password));
+		params.add(new BasicNameValuePair("queryParams", "{\"source\":\"auth_switcher\"}"));
+		httpPost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
 	}
 }
