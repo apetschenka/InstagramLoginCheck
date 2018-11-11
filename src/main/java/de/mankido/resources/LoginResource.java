@@ -47,20 +47,23 @@ public class LoginResource {
 		
 		try {
 			HttpClient httpClient = HttpClients.createDefault();
-
-			HttpPost httpPost = null;
-
-			generateAuthPost(httpPost);
+			String instaAuthUrl = Configuration.instance().getInstaAuthUrl();
+			HttpPost httpPost = new HttpPost(instaAuthUrl);
+			List<NameValuePair> params = generateAuthParams();
+			httpPost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
 			HttpResponse response = httpClient.execute(httpPost);
 			Header[] headers = response.getHeaders(MessageContext.HTTP_REQUEST_HEADERS);
 
-			generateLoginPost(httpPost, username, password);
+			String instaLoginUrl = Configuration.instance().getInstaLoginUrl();
+			httpPost = new HttpPost(instaLoginUrl);
+			params = generateLoginPost(username, password);
+			httpPost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
 			httpPost.setHeaders(headers);
 			response = httpClient.execute(httpPost);
 			
 			entity = response.getEntity();
-		    Scanner s = new Scanner(entity.getContent()).useDelimiter("\\A");
-		    logger.info(s.next());
+//		    Scanner s = new Scanner(entity.getContent()).useDelimiter("\\A");
+//		    logger.info(s.next());
 			
 		} catch (UnsupportedEncodingException e) {
 			logger.info("UnsupportedEncodingException : ", e);
@@ -79,10 +82,7 @@ public class LoginResource {
 		}
 	}
 
-	private void generateAuthPost(HttpPost httpPost) throws UnsupportedEncodingException {
-		String instaAuthUrl = Configuration.instance().getInstaAuthUrl();
-		httpPost = new HttpPost(instaAuthUrl);
-		
+	private List<NameValuePair> generateAuthParams() throws UnsupportedEncodingException {		
 		long dateInMs = new Date().getTime();
 		String messageDataExtra = String.format(Configuration.INSTA_MSG_DATA_EXTRA_TMP, "1217981644879628",
 				"e4jtzx", dateInMs / 1000, "[1,0]", 1, 6, 17, dateInMs,
@@ -99,17 +99,14 @@ public class LoginResource {
 		List<NameValuePair> params = new ArrayList<NameValuePair>(2);
 		params.add(new BasicNameValuePair("access_token", Configuration.instance().getInstaAccessToken()));
 		params.add(new BasicNameValuePair("message", message));
-		httpPost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
+		return params;
 	}
 
-	private void generateLoginPost(HttpPost httpPost, String username, String password) throws UnsupportedEncodingException {
-		String instaLoginUrl = Configuration.instance().getInstaLoginUrl();
-		httpPost = new HttpPost(instaLoginUrl);
-
+	private List<NameValuePair> generateLoginPost(String username, String password) throws UnsupportedEncodingException {
 		List<NameValuePair> params = new ArrayList<NameValuePair>(3);
 		params.add(new BasicNameValuePair("username", username));
 		params.add(new BasicNameValuePair("password", password));
 		params.add(new BasicNameValuePair("queryParams", "{\"source\":\"auth_switcher\"}"));
-		httpPost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
+		return params;
 	}
 }
